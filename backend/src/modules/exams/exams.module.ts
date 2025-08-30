@@ -10,6 +10,11 @@ import { AiConfigService } from '../../core/ai/ai.config';
 import { LlmModule } from '../llm/llm.module';
 import { PromptTemplateModule } from '../prompt-template/prompt-template.module';
 import { GenerateExamUseCase } from './application/commands/generate-exam.usecase';
+import { ExamQuestionPrismaRepository } from './infrastructure/persistence/exam-question.prisma.repository';
+import { EXAM_QUESTION_REPO } from './tokens';
+import { AddExamQuestionCommandHandler } from './application/commands/add-exam-question.handler';
+import { UpdateExamQuestionCommandHandler } from './application/commands/update-exam-question.handler';
+import { ApproveExamCommandHandler } from './application/commands/approve-exam.handler';
 
 @Module({
   imports: [PrismaModule, LlmModule, PromptTemplateModule],
@@ -23,6 +28,10 @@ import { GenerateExamUseCase } from './application/commands/generate-exam.usecas
     GenerateExamUseCase,
     CreateExamCommandHandler,
     GenerateQuestionsCommandHandler,
+    { provide: EXAM_QUESTION_REPO, useClass: ExamQuestionPrismaRepository },
+    AddExamQuestionCommandHandler,
+    UpdateExamQuestionCommandHandler,
+    ApproveExamCommandHandler,
   ],
 })
 export class ExamsModule {}
