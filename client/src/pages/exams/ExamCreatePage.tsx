@@ -12,7 +12,7 @@ import './ExamCreatePage.css';
 import AiResults from './AiResults';
 import { generateQuestions, createExamApproved, type GeneratedQuestion, quickSaveExam } from '../../services/exams.service';
 import { useSearchParams } from 'react-router-dom';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const layoutStyle: CSSProperties = {
   display: 'flex',
@@ -45,6 +45,7 @@ function normalizeToQuestions(res: any): GeneratedQuestion[] {
 export default function ExamsCreatePage() {
   const { toasts, pushToast, removeToast } = useToast();
   const formRef = useRef<ExamFormHandle>(null!);
+  const navigate = useNavigate();
 
   const [aiOpen, setAiOpen] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
@@ -207,6 +208,11 @@ export default function ExamsCreatePage() {
   };
 
   const onSave = async () => {
+    if (!courseId) {
+      pushToast('Abre el creador desde la materia (Crear examen) para asociarlo.', 'error');
+      return;
+    }
+
     const selected = aiQuestions.filter(q => q.include);
     if (!selected.length) {
       pushToast('Selecciona al menos una pregunta.', 'error');
@@ -226,12 +232,15 @@ export default function ExamsCreatePage() {
         options: (q as any).options ?? undefined,
       };
     });
-    await quickSaveExam({
+
+    await createExamApproved({
+      courseId,
       title: aiMeta.subject || 'Examen',
       questions,
     });
 
     pushToast('Examen guardado en la base de datos.', 'success');
+    navigate(`/courses/${courseId}`);
   };
 
   return (

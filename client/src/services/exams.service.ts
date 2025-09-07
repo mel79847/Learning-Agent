@@ -392,5 +392,18 @@ export async function createExamApproved(input: CreateExamApprovedInput) {
   const { data } = await api.post('/exams/approved', body);
   return data?.data ?? data;
 }
+export type CourseExamRow = {
+  id: number | string;
+  title: string;
+  status: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export async function listCourseExams(courseId: string): Promise<CourseExamRow[]> {
+  const { data } = await api.get(`/courses/${courseId}/exams`);
+  const rows = data?.data ?? data ?? [];
+  return Array.isArray(rows) ? rows : [];
+}
 
 export default { generateQuestions, createExam, createExamApproved, quickSaveExam };

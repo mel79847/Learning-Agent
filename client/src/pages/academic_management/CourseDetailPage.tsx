@@ -1,6 +1,6 @@
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useCallback, useEffect, useState } from "react";
-import { Table, Button, message, Typography, Empty, Tabs } from "antd";
+import { Table, Button, message, Typography, Empty, Tabs} from "antd";
 import {
   EditOutlined,
   DeleteOutlined,
@@ -31,8 +31,10 @@ import useCourses from "../../hooks/useCourses";
 import UploadButton from '../../components/shared/UploadButton';
 import { processFile } from "../../utils/enrollGroupByFile";
 import type { StudentInfo } from "../../interfaces/studentInterface";
+import { listCourseExams, type CourseExamRow } from "../../services/exams.service";
+import CourseExamsPanel from "../courses/CourseExamsPanel";
 
-const { Text } = Typography;
+const { Text, Title } = Typography;
 const { TabPane } = Tabs;
 
 export function CourseDetailPage() {
@@ -40,6 +42,8 @@ export function CourseDetailPage() {
   const { courseId } = useParams<{ courseId: string }>();
   const navigate = useNavigate();
   const user = useUserStore((s) => s.user);
+  const [rows, setRows] = useState<CourseExamRow[]>([]);
+  const [loadingExams, setLoadingExams] = useState(false);
 
   const { fetchClassById, actualClass, updateClass, softDeleteClass } = useClasses();
   const { students, fetchStudentsByClass } = useStudents();
@@ -135,6 +139,13 @@ export function CourseDetailPage() {
     fetchStudents();
   }, [fetchStudents]);
 
+  useEffect(() => {
+    if (!courseId) return;
+    setLoadingExams(true);
+    listCourseExams(courseId)
+      .then(setRows)
+      .finally(() => setLoadingExams(false));
+  }, [courseId]);
 
   const handleEditClass = async (values: Clase) => {
     const data = await updateClass(values);
@@ -620,33 +631,14 @@ export function CourseDetailPage() {
             <TabPane
               tab={
                 <span style={{ display: 'flex', alignItems: 'center', padding: '0 4px' }}>
-                  <BookOutlined style={{ marginRight: '6px', fontSize: '14px' }} />
+                  <BookOutlined style={{ marginRight: 6, fontSize: 14 }} />
                   <span>Gestión de Exámenes</span>
                 </span>
               }
               key="exams"
             >
-              <div style={{ padding: '32px' }}>
-                <div style={{ textAlign: 'center', padding: '64px 0' }}>
-                  <Empty description="No hay exámenes creados para este curso">
-                    <Text style={{ fontSize: '14px' }}>
-                      Los exámenes creados aparecerán aquí para su gestión
-                    </Text>
-                  </Empty>
-                  <Button 
-                    type="primary" 
-                    style={{ marginTop: "16px" }}
-                    onClick={goToExams}
-                  >
-                    Ir a exámenes
-                  </Button>
-                  <Button
-                    type="primary"
-                    onClick={() => navigate(`/exams/create?courseId=${courseId}`)}
-                  >
-                    Crear examen
-                  </Button>
-                </div>
+              <div style={{ padding: 32 }}>
+                {courseId && <CourseExamsPanel courseId={courseId} />}
               </div>
             </TabPane>
 
